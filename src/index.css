@@ -123,4 +123,7 @@
   .container {
     @apply mx-auto;
   }
+  .select-box button{
+    @apply !w-full
+  }
 }

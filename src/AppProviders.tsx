@@ -1,8 +1,8 @@
-import { UserProvider } from "./context/UserContext";
+import { DepartmentProvider, StaffUsersProvider, UserProvider } from "./context";
 
 type ProviderProps = { children: React.ReactNode };
 
-const providers = [UserProvider];
+const providers = [UserProvider, StaffUsersProvider, DepartmentProvider];
 
 export const AppProviders = ({ children }: ProviderProps) => {
   return providers.reduceRight(

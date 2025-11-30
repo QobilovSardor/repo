@@ -9,9 +9,10 @@ export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
   const navItems = [
-    { label: "Bosh sahifa", href: "/" },
+    { label: "Home", href: "/" },
     { label: "Dashboard", href: "/dashboard" },
     { label: "User dashboard", href: "/users-dashboard" },
+    { label: "Department dashboard", href: "/department-dashboard" },
   ];
   const { user } = useUser();
 

@@ -1,5 +1,12 @@
 import { Route, Routes } from "react-router-dom";
-import { Dashboard, Home, Login, Profile, UsersDashboard } from "./pages";
+import {
+  Dashboard,
+  DepartmentDashboard,
+  Home,
+  Login,
+  Profile,
+  UsersDashboard,
+} from "./pages";
 
 export const AppRoutes = () => (
   <Routes>
@@ -24,6 +31,10 @@ const routes = [
   {
     path: "/users-dashboard",
     component: UsersDashboard,
+  },
+  {
+    path: "/department-dashboard",
+    component: DepartmentDashboard,
   },
   {
     path: "/dashboard",
