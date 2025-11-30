@@ -34,7 +34,6 @@ export const DepartmentDashboard = () => {
     isBlocked: false,
   });
 
-  // input handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -43,7 +42,6 @@ export const DepartmentDashboard = () => {
     }));
   };
 
-  // select handler
   const handleSelect = (value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -51,7 +49,6 @@ export const DepartmentDashboard = () => {
     }));
   };
 
-  // checkbox handler
   const handleCheckbox = (value: boolean) => {
     setFormData((prev) => ({
       ...prev,
@@ -59,7 +56,6 @@ export const DepartmentDashboard = () => {
     }));
   };
 
-  // submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -83,7 +79,6 @@ export const DepartmentDashboard = () => {
 
   return (
     <div className="bg-gradient-to-br from-background via-background to-muted/20 space-y-6">
-      {/* HEADER */}
       <div className="flex items-center gap-3 mb-8">
         <div className="p-2 rounded-lg bg-primary/10">
           <Building className="w-8 h-8 text-primary" />
@@ -91,7 +86,6 @@ export const DepartmentDashboard = () => {
         <Title label="Department Management Dashboard" />
       </div>
 
-      {/* Create department */}
       <Card className="border border-border/50 shadow-lg pt-0 overflow-hidden">
         <CardHeader className="border-b border-border bg-gradient-to-r from-primary/5 to-transparent pt-6">
           <div className="space-y-2">
@@ -173,7 +167,6 @@ export const DepartmentDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Department List */}
       <DepartmentTable
         departments={departments}
         onEdit={(dep) => console.log("Edit:", dep)}

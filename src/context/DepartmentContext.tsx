@@ -1,5 +1,3 @@
-// src/context/DepartmentContext.tsx
-
 import {
   createContext,
   useContext,
@@ -34,7 +32,6 @@ export const DepartmentProvider = ({ children }: { children: ReactNode }) => {
   const [departments, setDepartments] = useState<IDepartment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // GET ALL
   const fetchDepartments = async () => {
     try {
       setLoading(true);
@@ -45,20 +42,17 @@ export const DepartmentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // CREATE
   const addDepartment = async (data: Partial<IDepartment>) => {
     const res = await createDepartment(data);
     setDepartments((prev) => [...prev, res.data.payload]);
   };
 
-  // UPDATE
   const editDepartment = async (id: number, data: Partial<IDepartment>) => {
     const res = await updateDepartment(id, data);
 
     setDepartments((prev) => prev.map((d) => (d.id === id ? res.data?.payload : d)));
   };
 
-  // DELETE
   const removeDepartment = async (id: number) => {
     await deleteDepartment(id);
     setDepartments((prev) => prev.filter((d) => d.id !== id));

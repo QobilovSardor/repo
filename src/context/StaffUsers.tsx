@@ -1,140 +1,118 @@
 import {
+  blockStaffUser,
+  deleteStaffUser,
+  getAllUsersFilter,
+  registerStaffUser,
+  updateStaffPassword,
+  updateStaffUser,
+} from "@/api/admin-users";
+import type { IStaffUser } from "@/interface/user";
+import {
   createContext,
   useContext,
   useState,
   useEffect,
-  useCallback,
   type ReactNode,
 } from "react";
-import {
-  getAllUsersFilter,
-  registerStaffUser,
-  deleteStaffUser,
-} from "@/api/admin-users";
 
-interface StaffUser {
-  id: number;
-  username: string;
-  firstName: string;
-  lastName?: string;
-  middleName?: string;
-  role: string;
-  status: "active" | "inactive";
-  departmentId?: number;
-}
-
-interface CreateStaffUserPayload {
-  username: string;
-  password: string;
-  firstName: string;
-  lastName?: string;
-  middleName?: string;
-  departmentId?: string;
-}
-
-interface StaffUsersContextType {
-  staffUsers: StaffUser[];
+interface StaffContextType {
+  staffUsers: IStaffUser[];
   loading: boolean;
-  error: string;
-  successMessage: string;
-  fetchUsers: () => Promise<void>;
-  createUser: (data: CreateStaffUserPayload) => Promise<void>;
-  deleteUser: (userId: number) => Promise<void>;
+  error: string | null;
+  successMessage: string | null;
+
+  fetchUsers: () => void;
+  createUser: (data: object) => Promise<void>;
+  deleteUser: (id: number) => Promise<void>;
+  blockUser: (id: number) => Promise<void>;
+  updatePassword: (id: number, pass: object) => Promise<void>;
+  updateUser: (id: number, data: object) => Promise<void>;
   clearMessages: () => void;
 }
 
-const StaffUsersContext = createContext<StaffUsersContextType | undefined>(
+const StaffUsersContext = createContext<StaffContextType | undefined>(
   undefined
 );
 
 export const StaffUsersProvider = ({ children }: { children: ReactNode }) => {
-  const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
+  const [staffUsers, setStaffUsers] = useState<IStaffUser[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError("");
-      const res = await getAllUsersFilter({
-        userRole: "STAFF",
-        limit: 100,
-        page: 1,
-      });
-      setStaffUsers(res.data?.payload?.clientList || []);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || "Failed to fetch staff users";
-      setError(errorMsg);
-      console.error("Fetch users error:", err);
+      const res = await getAllUsersFilter();
+      setStaffUsers(res.data?.payload?.clientList);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+      setError("Failed to fetch users");
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const createUser = useCallback(
-    async (data: CreateStaffUserPayload) => {
-      try {
-        setLoading(true);
-        setError("");
-
-        await registerStaffUser({
-          username: data.username,
-          password: data.password,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          middleName: data.middleName,
-          departmentId: data.departmentId,
-        });
-
-        setSuccessMessage("Staff user registered successfully!");
-
-        // Users listini yangilash
-        await fetchUsers();
-
-        // Success message'ni 3 sekunddan so'ng o'chirish
-        setTimeout(() => setSuccessMessage(""), 3000);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        const errorMsg =
-          err.response?.data?.message || "Failed to register user";
-        setError(errorMsg);
-        console.error("Create user error:", err);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchUsers]
-  );
-
-  const deleteUser = useCallback(
-    async (userId: number) => {
-      try {
-        setError("");
-        await deleteStaffUser(userId);
-        setSuccessMessage("User deleted successfully!");
-        await fetchUsers();
-        setTimeout(() => setSuccessMessage(""), 3000);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        const errorMsg = err.response?.data?.message || "Failed to delete user";
-        setError(errorMsg);
-        console.error("Delete user error:", err);
-      }
-    },
-    [fetchUsers]
-  );
-
-  const clearMessages = useCallback(() => {
-    setError("");
-    setSuccessMessage("");
-  }, []);
+  };
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+  }, []);
+
+  const createUser = async (data: object) => {
+    setLoading(true);
+    try {
+      await registerStaffUser(data);
+      setSuccessMessage("User registered successfully!");
+      fetchUsers();
+    } catch {
+      setError("Failed to create user");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteUser = async (id: number) => {
+    try {
+      await deleteStaffUser(id);
+      setSuccessMessage("User deleted");
+      fetchUsers();
+    } catch {
+      setError("Failed to delete user");
+    }
+  };
+
+  const blockUser = async (id: number) => {
+    try {
+      await blockStaffUser(id);
+      setSuccessMessage("User blocked/unblocked");
+      fetchUsers();
+    } catch {
+      setError("Failed to update status");
+    }
+  };
+
+  const updatePassword = async (id: number, data: object) => {
+    try {
+      await updateStaffPassword(id, data);
+      setSuccessMessage("Password updated");
+    } catch {
+      setError("Failed to update password");
+    }
+  };
+
+  const updateUser = async (id: number, data: object) => {
+    try {
+      await updateStaffUser(id, data);
+      setSuccessMessage("User updated");
+      fetchUsers();
+    } catch {
+      setError("Failed to update user");
+    }
+  };
+
+  const clearMessages = () => {
+    setError(null);
+    setSuccessMessage(null);
+  };
 
   return (
     <StaffUsersContext.Provider
@@ -146,6 +124,9 @@ export const StaffUsersProvider = ({ children }: { children: ReactNode }) => {
         fetchUsers,
         createUser,
         deleteUser,
+        blockUser,
+        updatePassword,
+        updateUser,
         clearMessages,
       }}
     >
@@ -156,8 +137,7 @@ export const StaffUsersProvider = ({ children }: { children: ReactNode }) => {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useStaffUsers = () => {
-  const context = useContext(StaffUsersContext);
-  if (!context)
-    throw new Error("useStaffUsers must be used within StaffUsersProvider");
-  return context;
+  const ctx = useContext(StaffUsersContext);
+  if (!ctx) throw new Error("useStaffUsers must be inside StaffUsersProvider");
+  return ctx;
 };

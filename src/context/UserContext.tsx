@@ -1,3 +1,6 @@
+// user context
+
+
 import { updateProfile } from "@/api/auth";
 import type { IUser } from "@/interface/user";
 import {
@@ -30,8 +33,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const updateUser = async (updatedData: Partial<IUser>) => {
     try {
       const res = await updateProfile(updatedData);
-      console.log(res.data.payload, "salom");
-
       const updatedUser = res.data?.payload as IUser;
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));

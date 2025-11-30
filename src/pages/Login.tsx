@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
 import { PATHS, USER_ROLES } from "@/configs/constants";
+import { useUser } from "@/context/UserContext";
 
 interface LoginForm {
   username: string;
@@ -24,6 +25,7 @@ export const Login = () => {
     password: "87654321",
   });
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   const [error, setError] = useState<string>("");
 
@@ -43,9 +45,8 @@ export const Login = () => {
     try {
       await login(formData);
       const res = await getUserData();
-      console.log(res.data, "data");
       const userRole = res?.data?.payload?.userRole;
-      console.log(userRole);
+      setUser(res?.data?.payload);
       switch (userRole) {
         case USER_ROLES.ADMIN:
           navigate(PATHS.ADMIN);

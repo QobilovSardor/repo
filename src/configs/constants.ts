@@ -15,7 +15,7 @@ export const PATHS = {
   REGISTER: "/register",
   USER: "/user",
   REGISTER_AUTHOR: "/register-author",
-  ADMIN: "/admin",
+  ADMIN: "/profile",
   STAFF: "/staff",
   AUTHOR: "/author",
   DEPARTMENT: "/department",
