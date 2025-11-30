@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import { Home } from "./pages";
+import { Dashboard, Home, Login, Profile, UsersDashboard } from "./pages";
 
 export const AppRoutes = () => (
   <Routes>
@@ -16,5 +16,21 @@ const routes = [
   {
     path: "/",
     component: Home,
+  },
+  {
+    path: "/login",
+    component: Login,
+  },
+  {
+    path: "/users-dashboard",
+    component: UsersDashboard,
+  },
+  {
+    path: "/dashboard",
+    component: Dashboard,
+  },
+  {
+    path: "/profile",
+    component: Profile,
   },
 ];
