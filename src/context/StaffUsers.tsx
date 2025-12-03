@@ -11,6 +11,8 @@ import {
   createContext,
   useContext,
   useState,
+  useCallback,
+  useRef,
   useEffect,
   type ReactNode,
 } from "react";
@@ -21,7 +23,7 @@ interface StaffContextType {
   error: string | null;
   successMessage: string | null;
 
-  fetchUsers: () => void;
+  fetchUsers: () => Promise<void>;
   createUser: (data: object) => Promise<void>;
   deleteUser: (id: number) => Promise<void>;
   blockUser: (id: number) => Promise<void>;
@@ -40,96 +42,170 @@ export const StaffUsersProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const res = await getAllUsersFilter();
-      setStaffUsers(res.data?.payload?.clientList);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      setError("Failed to fetch users");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Pending requestlarni kuzatish
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const timeoutRef = useRef(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const createUser = async (data: object) => {
-    setLoading(true);
-    try {
-      await registerStaffUser(data);
-      setSuccessMessage("User registered successfully!");
-      fetchUsers();
-    } catch {
-      setError("Failed to create user");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteUser = async (id: number) => {
-    try {
-      await deleteStaffUser(id);
-      setSuccessMessage("User deleted");
-      fetchUsers();
-    } catch {
-      setError("Failed to delete user");
-    }
-  };
-
-  const blockUser = async (id: number) => {
-    try {
-      await blockStaffUser(id);
-      setSuccessMessage("User blocked/unblocked");
-      fetchUsers();
-    } catch {
-      setError("Failed to update status");
-    }
-  };
-
-  const updatePassword = async (id: number, data: object) => {
-    try {
-      await updateStaffPassword(id, data);
-      setSuccessMessage("Password updated");
-    } catch {
-      setError("Failed to update password");
-    }
-  };
-
-  const updateUser = async (id: number, data: object) => {
-    try {
-      await updateStaffUser(id, data);
-      setSuccessMessage("User updated");
-      fetchUsers();
-    } catch {
-      setError("Failed to update user");
-    }
-  };
-
-  const clearMessages = () => {
+  const clearMessages = useCallback(() => {
     setError(null);
     setSuccessMessage(null);
+  }, []);
+
+  // Auto-clear messages
+  const showMessage = useCallback(
+    (type: "error" | "success", message: string) => {
+      if (type === "error") {
+        setError(message);
+      } else {
+        setSuccessMessage(message);
+      }
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        clearMessages();
+      }, 3000);
+    },
+    [clearMessages]
+  );
+
+  const fetchUsers = useCallback(async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+    setLoading(true);
+    clearMessages();
+
+    try {
+      const res = await getAllUsersFilter();
+      setStaffUsers(res.data?.payload?.clientList || []);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name !== "AbortError") {
+        showMessage("error", "Foydalanuvchilarni yuklashda xato");
+        console.error("Fetch users error:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [clearMessages, showMessage]);
+
+  const createUser = useCallback(
+    async (data: object) => {
+      setLoading(true);
+      clearMessages();
+
+      try {
+        await registerStaffUser(data);
+        showMessage(
+          "success",
+          "Foydalanuvchi muvaffaqiyatli ro'yxatdan o'tdi!"
+        );
+        await fetchUsers();
+      } catch (err: unknown) {
+        showMessage("error", "Foydalanuvchini yaratishda xato");
+        console.error("Create user error:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchUsers, showMessage, clearMessages]
+  );
+
+  const deleteUser = useCallback(
+    async (id: number) => {
+      clearMessages();
+
+      try {
+        await deleteStaffUser(id);
+        showMessage("success", "Foydalanuvchi muvaffaqiyatli o'chirildi!");
+        await fetchUsers();
+      } catch (err: unknown) {
+        showMessage("error", "Foydalanuvchini o'chirishda xato");
+        console.error("Delete user error:", err);
+      }
+    },
+    [fetchUsers, showMessage, clearMessages]
+  );
+
+  const blockUser = useCallback(
+    async (id: number) => {
+      clearMessages();
+
+      try {
+        await blockStaffUser(id);
+        showMessage("success", "Foydalanuvchi holati o'zgartirildi!");
+        await fetchUsers();
+      } catch (err: unknown) {
+        showMessage("error", "Foydalanuvchini blokirovka qilishda xato");
+        console.error("Block user error:", err);
+      }
+    },
+    [fetchUsers, showMessage, clearMessages]
+  );
+
+  const updatePassword = useCallback(
+    async (id: number, data: object) => {
+      clearMessages();
+
+      try {
+        await updateStaffPassword(id, data);
+        showMessage("success", "Parol muvaffaqiyatli o'zgartirildi!");
+      } catch (err: unknown) {
+        showMessage("error", "Parolni o'chirishda xato");
+        console.error("Update password error:", err);
+      }
+    },
+    [showMessage, clearMessages]
+  );
+
+  const updateUser = useCallback(
+    async (id: number, data: object) => {
+      clearMessages();
+
+      try {
+        await updateStaffUser(id, data);
+        showMessage("success", "Foydalanuvchi muvaffaqiyatli o'zgartirildi!");
+        await fetchUsers();
+      } catch (err: unknown) {
+        showMessage("error", "Foydalanuvchini o'chirishda xato");
+        console.error("Update user error:", err);
+      }
+    },
+    [fetchUsers, showMessage, clearMessages]
+  );
+
+  // Cleanup: unmount bo'lganda pending requestlarni bekor qilish
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const value: StaffContextType = {
+    staffUsers,
+    loading,
+    error,
+    successMessage,
+    fetchUsers,
+    createUser,
+    deleteUser,
+    blockUser,
+    updatePassword,
+    updateUser,
+    clearMessages,
   };
 
   return (
-    <StaffUsersContext.Provider
-      value={{
-        staffUsers,
-        loading,
-        error,
-        successMessage,
-        fetchUsers,
-        createUser,
-        deleteUser,
-        blockUser,
-        updatePassword,
-        updateUser,
-        clearMessages,
-      }}
-    >
+    <StaffUsersContext.Provider value={value}>
       {children}
     </StaffUsersContext.Provider>
   );

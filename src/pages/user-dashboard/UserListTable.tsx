@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStaffUsers } from "@/context/StaffUsers";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -15,8 +15,12 @@ import { Input } from "@/components/ui/input";
 import { Search, Edit2, Trash2 } from "lucide-react";
 
 export const UserListTable = () => {
-  const { staffUsers, loading, deleteUser } = useStaffUsers();
+  const { staffUsers, loading, deleteUser, fetchUsers } = useStaffUsers();
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const filtered = staffUsers?.filter(
     (u) =>

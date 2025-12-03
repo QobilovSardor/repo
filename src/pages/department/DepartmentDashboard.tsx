@@ -19,12 +19,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Building, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDepartments } from "@/context/DepartmentContext";
 import { DepartmentTable } from "./DepartmentTable";
 
 export const DepartmentDashboard = () => {
-  const { departments, addDepartment, removeDepartment } = useDepartments();
+  const { departments, addDepartment, removeDepartment, fetchDepartments } =
+    useDepartments();
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   const [formData, setFormData] = useState({
     depType: "FACULTY",
