@@ -1,6 +1,7 @@
 import axios from "axios";
 import API from "./api";
 import { handleLogout } from "@/helpers/logout";
+import { notifyError } from "@/interface/notify";
 
 const api = axios.create({
   baseURL: API.BASE,
@@ -25,7 +26,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const { status } = error.response;
+    const { status, data } = error.response;
 
     switch (status) {
       case 401:
@@ -38,6 +39,22 @@ api.interceptors.response.use(
         break;
       default:
         console.error("API error", error.response.data || status);
+    }
+    switch (status) {
+      case 401:
+        notifyError("Session expired. Redirecting to login...");
+        handleLogout();
+        window.location.href = "/login";
+        break;
+      case 403:
+        notifyError("You do not have permission to perform this action.");
+        break;
+      default: {
+        const message =
+          (data && (data.message || JSON.stringify(data))) ||
+          "Something went wrong. Please try again.";
+        notifyError(message);
+      }
     }
 
     return Promise.reject(error);
