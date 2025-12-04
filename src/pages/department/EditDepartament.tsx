@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { IDepartment } from "@/interface/department";
+import type { IDepartment } from "@/interface";
 
 interface EditDepartmentProps {
   openEditModal: boolean;

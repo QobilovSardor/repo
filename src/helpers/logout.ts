@@ -1,5 +1,4 @@
-export const handleLogout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");
+export const logoutUser = () => {
   localStorage.removeItem("user");
+  window.location.href = "/login";
 };

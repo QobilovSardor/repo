@@ -22,19 +22,12 @@ import { Building, Plus } from "lucide-react";
 import { useState } from "react";
 import { DepartmentTable } from "./DepartmentTable";
 import { useDepartments } from "@/context/department/useDepartment";
+import { INITIAL_DEPARTMENT_FORM_DATA } from "@/configs";
 
 export const DepartmentDashboard = () => {
-  const { departments, addDepartment, removeDepartment } =
-    useDepartments();
+  const { departments, addDepartment, removeDepartment } = useDepartments();
 
-
-  const [formData, setFormData] = useState({
-    depType: "FACULTY",
-    nameUz: "",
-    nameEn: "",
-    nameRu: "",
-    isBlocked: false,
-  });
+  const [formData, setFormData] = useState(INITIAL_DEPARTMENT_FORM_DATA);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -61,15 +54,8 @@ export const DepartmentDashboard = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    await addDepartment({
-      depType: formData.depType,
-      nameUz: formData.nameUz,
-      nameEn: formData.nameEn || null,
-      nameRu: formData.nameRu || null,
-      isBlocked: formData.isBlocked,
-    });
+    await addDepartment(formData);
 
-    // formni tozalash
     setFormData({
       depType: "FACULTY",
       nameUz: "",

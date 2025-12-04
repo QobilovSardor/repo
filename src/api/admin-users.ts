@@ -8,7 +8,7 @@ export interface FilterParams {
 }
 
 export const getAllUsersFilter = async (params: FilterParams = {}) => {
-  const { key = "", limit = 100, page = 1 } = params;
+  const { key = "", limit = 100, page = 0 } = params;
   // userRole = "STAFF",
   const query = new URLSearchParams({
     key,

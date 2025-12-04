@@ -4,7 +4,7 @@ import {
   getAllDepartment,
   updateDepartment,
 } from "@/api/department";
-import type { IDepartment } from "@/interface/department";
+import type { IDepartment } from "@/interface";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {

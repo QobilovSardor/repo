@@ -1,4 +1,4 @@
-import type { IStaffUser } from "@/interface/user";
+import type { IStaffUser } from "@/interface";
 import { createContext } from "react";
 
 export interface StaffContextType {

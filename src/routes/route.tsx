@@ -6,6 +6,7 @@ import {
   Dashboard,
   Profile,
   Home,
+  Register,
 } from "@/pages";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -29,6 +30,7 @@ export const AppRoutes = () => (
 const routes = [
   { path: "/", component: Home, protected: false },
   { path: "/login", component: Login, protected: false },
+  { path: "/register", component: Register, protected: false },
   { path: "/users-dashboard", component: UsersDashboard, protected: true },
   {
     path: "/department-dashboard",

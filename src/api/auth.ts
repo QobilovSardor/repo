@@ -1,19 +1,25 @@
+import type { IUser } from "@/interface";
 import { apiRequest } from "./apiClient";
 
-export const loginFunc = async (data: { username: string; password: string }) => {
+export const loginFunc = async (data: {
+  username: string;
+  password: string;
+}) => {
   const response = await apiRequest("/authenticate", "POST", data);
   return response;
 };
 
 export const getUserData = async () => {
   const response = await apiRequest("/user", "GET");
-  const data = JSON.stringify(response.data?.payload);
-  localStorage.setItem("user", data);
-  return response;
+  return response?.data;
 };
 
-export const updatePassword = async (data: object) =>
-  await apiRequest("/user/password", "PUT", data);
+export const updatePassword = async (data: object) => {
+  const res = await apiRequest("/user/password", "PUT", data);
+  return res;
+};
 
-export const updateProfile = async (data: object) =>
-  await apiRequest("/user", "PUT", data);
+export const updateProfile = async (data: Partial<IUser>) => {
+  const response = await apiRequest("/user", "PUT", data);
+  return response.data;
+};

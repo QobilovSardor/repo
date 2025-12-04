@@ -1,7 +1,7 @@
 import axios from "axios";
 import API from "./api";
-import { handleLogout } from "@/helpers/logout";
-import { notifyError } from "@/interface/notify";
+import { notifyError } from "@/interface";
+import { logoutUser } from "@/helpers/logout";
 
 const api = axios.create({
   baseURL: API.BASE,
@@ -35,10 +35,8 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 api.interceptors.response.use(
   (response) => response,
-
   async (error) => {
     const originalRequest = error.config;
-
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -58,16 +56,14 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        handleLogout();
+        logoutUser();
         notifyError("Session expired. Please login again.");
-        window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
-    // Qolgan xatolar
     const status = error.response?.status;
     const data = error.response?.data;
 

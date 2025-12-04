@@ -1,4 +1,4 @@
-import type { IDepartment } from "@/interface/department";
+import type { IDepartment } from "@/interface";
 import { apiRequest } from "./apiClient";
 
 export const getAllDepartment = async () => {

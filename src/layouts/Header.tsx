@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/context/UserContext";
+import { useAuth } from "@/context";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -13,7 +13,7 @@ export const Header = () => {
     { label: "User dashboard", href: "/users-dashboard" },
     { label: "Department dashboard", href: "/department-dashboard" },
   ];
-  const { user } = useUser();
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -38,7 +38,7 @@ export const Header = () => {
           </nav>
 
           {/* Desktop CTA Buttons */}
-          {!user ? (
+          {!isAuthenticated ? (
             <div className="hidden gap-2 md:flex">
               <Link to="/login">
                 <Button>Kirish</Button>

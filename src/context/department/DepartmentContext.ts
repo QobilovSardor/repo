@@ -1,4 +1,4 @@
-import type { IDepartment } from "@/interface/department";
+import type { IDepartment } from "@/interface";
 import { createContext } from "react";
 
 export interface DepartmentContextType {

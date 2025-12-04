@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext, type AuthContextType } from "./AuthContext";
-import type { IUser } from "@/interface/user";
-import { getUserData, loginFunc } from "@/api/auth";
+import type { IUser } from "@/interface";
+import { getUserData, loginFunc, updateProfile } from "@/api/auth";
 import { PATHS, USER_ROLES } from "@/configs/constants";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -13,26 +13,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(!!storedUser);
   const navigate = useNavigate();
 
+  const [loading, setLoading] = useState(false);
+  const [authError, setError] = useState<string | null>(null);
+
   // login function
   const login: AuthContextType["login"] = async (formData) => {
-    await loginFunc(formData);
-    const res = await getUserData();
-    const userData = res?.data?.payload;
+    try {
+      setLoading(true);
+      setError(null);
+      await loginFunc(formData);
+      const res = await getUserData();
+      const userData = res?.payload;
 
-    if (!userData) throw new Error("User data not found");
-    setUser(userData);
-    setIsAuthenticated(true);
-    localStorage.setItem("user", JSON.stringify(userData));
+      if (!userData) throw new Error("User data not found");
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem("user", JSON.stringify(userData));
 
-    switch (userData.userRole) {
-      case USER_ROLES.ADMIN:
-        navigate(PATHS.ADMIN);
-        break;
-      case USER_ROLES.STAFF:
-        navigate(PATHS.STAFF);
-        break;
-      default:
-        navigate(PATHS.USER);
+      switch (userData.userRole) {
+        case USER_ROLES.ADMIN:
+          navigate(PATHS.ADMIN);
+          break;
+        case USER_ROLES.STAFF:
+          navigate(PATHS.STAFF);
+          break;
+        default:
+          navigate(PATHS.USER);
+      }
+    } catch {
+      setError("Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // update profile
+  const updateProfileFunc = async (updatedData: Partial<IUser>) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await updateProfile(updatedData);
+      const updatedUser = res?.payload as IUser;
+      console.log(res, "update res");
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    } catch (error) {
+      console.log(error);
+      setError("An error occurred while updating the data!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,7 +75,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        login,
+        logout,
+        loading,
+        authError,
+        updateProfileFunc,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

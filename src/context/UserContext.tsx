@@ -1,8 +1,5 @@
-// user context
-
-
 import { updateProfile } from "@/api/auth";
-import type { IUser } from "@/interface/user";
+import type { IUser } from "@/interface";
 import {
   createContext,
   useContext,

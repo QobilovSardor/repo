@@ -12,16 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
 import { isPasswordLengthValid } from "@/helpers";
 import { useAuth } from "@/context";
-import type { ILoginForm } from "@/interface/user";
-
+import type { ILoginForm } from "@/interface";
+import { INITIAL_LOGIN_FORM_DATA } from "@/configs";
 
 export const Login = () => {
-  const [formData, setFormData] = useState<ILoginForm>({
-    username: "admin",
-    password: "87654321",
-  });
+  const [formData, setFormData] = useState<ILoginForm>(INITIAL_LOGIN_FORM_DATA);
 
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
   const [error, setError] = useState<string>("");
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -50,7 +47,7 @@ export const Login = () => {
   };
 
   return (
-    <div className="h-[calc(100vh_-_65px)] flex justify-center items-center">
+    <div className="h-[calc(100vh_-_130px)] flex justify-center items-center">
       <Card className="w-full max-w-sm mx-auto">
         <CardHeader className="text-center">
           <CardTitle>Tizimga kirish</CardTitle>
@@ -91,12 +88,12 @@ export const Login = () => {
             </div>
 
             <Button type="submit" className="w-full mt-6">
-              Kirish
+              {loading ? "Loading..." : "Login"}
             </Button>
           </form>
         </CardContent>
 
-        <CardFooter className="flex-col gap-2">
+        <CardFooter className="flex-col gap-2 -mt-3">
           <Link to="/register" className="w-full">
             <Button variant="outline" className="w-full">
               Ro'yxatdan o'tish

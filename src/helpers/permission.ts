@@ -1,4 +1,4 @@
-import type { IUser } from "@/interface/user";
+import type { IUser } from "@/interface";
 
 export const hasRole = (user: IUser, role: string) => {
   if (!user || !user.userRole) return false;

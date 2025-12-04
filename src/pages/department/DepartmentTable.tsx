@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { IDepartment } from "@/interface/department";
+import type { IDepartment } from "@/interface";
 import { EditDepartment } from "./EditDepartament";
 import { DeleteDepartment } from "./DeleteDepartment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -10,7 +10,7 @@ import {
   updateStaffPassword,
   updateStaffUser,
 } from "@/api/admin-users";
-import type { IStaffUser } from "@/interface/user";
+import type { IStaffUser } from "@/interface";
 
 interface StaffUsersProviderProps {
   children: ReactNode;
@@ -25,7 +25,7 @@ export const StaffUsersProvider = ({ children }: StaffUsersProviderProps) => {
       const res = await getAllUsersFilter();
       return res.data?.payload?.clientList || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 daqiqa cache
+    staleTime: 5 * 60 * 1000,
   });
 
   const addMutation = useMutation({

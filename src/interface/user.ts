@@ -1,19 +1,19 @@
-export interface ILoginForm {
-  username: string;
-  password: string;
-}
 export interface IUser {
   id: number;
   username: string;
   firstName: string;
   lastName: string;
   middleName?: string;
-  departmentId: number;
-  role: string;
-  status: "active" | "inactive";
-  createdAt?: string;
-  updatedAt?: string;
   userRole: string;
+  password: string;
+  departmentId?: string | number | null;
+  hemisId?: string | null;
+  orcid?: string | null;
+  ror?: string | null;
+}
+export interface ILoginForm {
+  username: string;
+  password: string;
 }
 export interface IStaffUser {
   id: number;

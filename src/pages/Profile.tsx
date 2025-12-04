@@ -1,5 +1,5 @@
 import toast, { Toaster } from "react-hot-toast";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   Card,
   CardContent,
@@ -10,100 +10,39 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
 import { Button } from "@/components/ui/button";
-import { Lock, User, Hash, LogOut } from "lucide-react";
-import { useUser } from "@/context/UserContext";
+import { Lock, User, LogOut } from "lucide-react";
 import { updatePassword } from "@/api/auth";
-import type { IUser } from "@/interface/user";
-import { handleLogout } from "@/helpers/logout";
-import { Title } from "@/components";
-
-const ORCID_REGEX = /\d{4}\d{4}\d{4}\d{4}/;
-const ROR_REGEX = "";
+import { FormField, Title } from "@/components";
+import { useAuth, useDepartments } from "@/context";
+import { INITIAL_USER_FORM_DATA } from "@/configs/constants";
+import { isPasswordLengthValid } from "@/helpers";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { IUser } from "@/interface";
+import axios from "axios";
 
 export const Profile = () => {
-  const { user, updateUser } = useUser();
-
-  const fields = [
-    {
-      id: "firstName",
-      label: "First Name",
-      type: "text",
-      name: "firstName",
-      maxLength: 63,
-      required: true,
-      placeholder: user?.firstName,
-      icon: User,
-    },
-    {
-      id: "lastName",
-      label: "Last Name",
-      type: "text",
-      name: "lastName",
-      maxLength: 63,
-      required: true,
-      placeholder: user?.lastName,
-      icon: User,
-    },
-    {
-      id: "middleName",
-      label: "Middle Name (Optional)",
-      type: "text",
-      name: "middleName",
-      maxLength: 63,
-      placeholder: user?.middleName,
-      fullWidth: true,
-    },
-    {
-      id: "hemisId",
-      label: "Hemis ID (Optional)",
-      type: "text",
-      name: "hemisId",
-      maxLength: 31,
-      placeholder: "HEM-12345",
-      icon: Hash,
-    },
-    {
-      id: "departmentId",
-      label: "Department (Optional)",
-      type: "select",
-      name: "departmentId",
-      placeholder: "Select Department",
-    },
-    {
-      id: "orcid",
-      label: "ORCID (XXXX-XXXX-XXXX-XXXX)",
-      type: "text",
-      name: "orcid",
-      maxLength: 19,
-      pattern: ORCID_REGEX.source,
-      title: "Format: XXXX-XXXX-XXXX-XXXX",
-      placeholder: "0000-0000-0000-0000",
-    },
-    {
-      id: "ror",
-      label: "ROR (0xxxxxxXX)",
-      type: "text",
-      name: "ror",
-      maxLength: 9,
-      pattern: ROR_REGEX,
-      title: "Format: 0xxxxxxXX (9 chars total)",
-      placeholder: "012345678",
-    },
-  ];
-
-  const initialState = fields.reduce((acc, field) => {
-    acc[field.name] = "";
-    return acc;
-  }, {} as Record<string, string>);
-
+  const { updateProfileFunc } = useAuth();
+  const { logout, user } = useAuth();
+  const { departments } = useDepartments();
   const [passwordData, setPasswordData] = useState({
     oldPassword: "",
     newPassword: "",
   });
+  const [formData, setFormData] = useState(INITIAL_USER_FORM_DATA);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState(initialState);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const allFieldsEmpty = useMemo(
+    () => Object.values(formData).every((v) => v === "" || v === null),
+    [formData]
+  );
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -119,46 +58,62 @@ export const Profile = () => {
 
   const handlePasswordSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
 
-    if (passwordData.newPassword.length < 8) {
-      setErrorMessage("New password must be at least 8 characters long");
-      toast("Here is your toast.");
-      setTimeout(() => setErrorMessage(""), 3000);
+    if (!isPasswordLengthValid(passwordData.newPassword)) {
+      console.log(passwordData.newPassword);
+      toast.error("New password must be at least 8 characters long");
       return;
     }
+    if (allFieldsEmpty) return;
+
+    setLoading(true);
     try {
-      const res = await updatePassword(passwordData);
-      console.log(res);
-      // setSuccessMessage("Password updated successfully!");
+      setLoading(false);
+      await updatePassword(passwordData);
       toast.success("Password updated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
       setPasswordData({ oldPassword: "", newPassword: "" });
-    } catch (error) {
-      setErrorMessage("Password error");
-      setTimeout(() => setErrorMessage(""), 3000);
-      console.log(error);
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.data?.code === 2006) {
+          toast.error("Wrong password");
+        } else {
+          toast.error(err.response?.data?.message || "Password error");
+        }
+      } else {
+        toast.error("Unexpected error");
+      }
+
+      setLoading(false);
     }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSuccessMessage("");
 
-    const payload: Partial<IUser> = Object.fromEntries(
-      Object.entries(formData).map(([key, value]) => [
-        key,
-        value.trim() || null,
-      ])
-    );
+    if (allFieldsEmpty) return;
 
+    setLoading(true);
     try {
-      await updateUser(payload);
-      setSuccessMessage("Profile updated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.log(error);
+      const changedEntries = Object.entries(formData).filter(
+        ([, v]) => v !== "" && v !== null && v !== undefined
+      );
+      const changedPayload = Object.fromEntries(
+        changedEntries
+      ) as Partial<IUser>;
+
+      const payloadToSend = {
+        ...(user ?? {}),
+        ...changedPayload,
+      } as Partial<IUser>;
+
+      await updateProfileFunc(payloadToSend as unknown as IUser);
+      toast.success("Profile updated successfully!");
+      setFormData(INITIAL_USER_FORM_DATA);
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred while updating your profile!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -166,10 +121,6 @@ export const Profile = () => {
     <>
       <Toaster position="top-right" />
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 py-8">
-        {/* Header */}
-        <button onClick={() => toast.success("Here is your toast.")}>
-          toast
-        </button>
         <div className="mb-8 flex items-center justify-between">
           <Title
             label="Account Settings"
@@ -177,233 +128,179 @@ export const Profile = () => {
           />
         </div>
 
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg text-green-800 dark:text-green-200">
-            {successMessage}
-          </div>
-        )}
-
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Details Card */}
-          <div className="lg:col-span-2">
-            <Card className="border border-border shadow-lg pt-0">
-              <CardHeader className="border-b border-border pt-5 bg-gradient-to-r from-primary/5 to-transparent">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl">
-                      Profile Information
-                    </CardTitle>
-                    <CardDescription>
-                      Update your personal and professional details
-                    </CardDescription>
-                  </div>
+          <Card className="border border-border shadow-lg pt-0 lg:col-span-2">
+            <CardHeader className="border-b border-border pt-5 bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <User className="w-5 h-5 text-primary" />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Name Fields Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {fields.slice(0, 2).map((field) => (
-                      <div key={field.id} className="flex flex-col gap-2">
-                        <Label
-                          htmlFor={field.id}
-                          className="text-sm font-medium"
-                        >
-                          {field.label}
-                        </Label>
-                        <div className="relative">
-                          {field.icon && (
-                            <field.icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          )}
-                          <Input
-                            id={field.id}
-                            name={field.name}
-                            type={field.type}
-                            value={formData[field.name]}
-                            onChange={handleChange}
-                            maxLength={field.maxLength}
-                            placeholder={field.placeholder}
-                            required={field.required}
-                            className="pl-9"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Middle Name Full Width */}
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="middleName" className="text-sm font-medium">
-                      {fields[2].label}
-                    </Label>
-                    <Input
-                      id="middleName"
-                      name="middleName"
-                      type="text"
-                      value={formData.middleName}
-                      onChange={handleChange}
-                      maxLength={63}
-                      placeholder={fields[2].placeholder}
-                    />
-                  </div>
-
-                  {/* Other Fields */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Hemis ID */}
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="hemisId" className="text-sm font-medium">
-                        {fields[3].label}
-                      </Label>
-                      <div className="relative">
-                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="hemisId"
-                          name="hemisId"
-                          type="text"
-                          value={formData.hemisId}
-                          onChange={handleChange}
-                          maxLength={31}
-                          placeholder={fields[3].placeholder}
-                          className="pl-9"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Department */}
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="departmentId"
-                        className="text-sm font-medium"
-                      >
-                        {fields[4].label}
-                      </Label>
-                      <select
-                        id="departmentId"
-                        name="departmentId"
-                        value={formData.departmentId}
-                        onChange={handleChange}
-                        className="px-3 py-2 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        <option value="">{fields[4].placeholder}</option>
-                        <option value="dep1">Computer Science</option>
-                        <option value="dep2">Engineering</option>
-                        <option value="dep3">Business</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* ORCID and ROR */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {fields.slice(5, 7).map((field) => (
-                      <div key={field.id} className="flex flex-col gap-2">
-                        <Label
-                          htmlFor={field.id}
-                          className="text-sm font-medium"
-                        >
-                          {field.label}
-                        </Label>
-                        <Input
-                          id={field.id}
-                          name={field.name}
-                          type={field.type}
-                          value={formData[field.name]}
-                          onChange={handleChange}
-                          maxLength={field.maxLength}
-                          placeholder={field.placeholder}
-                          pattern={field.pattern}
-                          title={field.title}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-between gap-1 flex-wrap">
-                    <Button type="submit">Save Profile Changes</Button>
-                    <Button onClick={handleLogout} variant="destructive">
-                      Log out
-                      <LogOut />
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Password Card */}
-          <div>
-            <Card className="border border-border shadow-lg h-full pt-0 overflow-hidden">
-              <CardHeader className="border-b border-border pt-5 bg-gradient-to-r from-primary/5 to-transparent">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Lock className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Security</CardTitle>
-                    <CardDescription className="text-xs">
-                      Update password
-                    </CardDescription>
-                  </div>
+                <div>
+                  <CardTitle className="text-xl">Profile Information</CardTitle>
+                  <CardDescription>
+                    Update your personal and professional details
+                  </CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                  <div className="flex flex-col gap-2">
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    id="firstName"
+                    label="First name"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder={user?.firstName}
+                  />
+                  <FormField
+                    id="lastName"
+                    label="Last name"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder={user?.lastName}
+                  />
+
+                  <div className="flex flex-col gap-2 select-box">
                     <Label
-                      htmlFor="oldPassword"
+                      htmlFor="departmentId"
                       className="text-sm font-medium"
                     >
-                      Current Password
+                      Department (Optional)
                     </Label>
-                    <Input
-                      id="oldPassword"
-                      type="password"
-                      name="oldPassword"
-                      value={passwordData.oldPassword}
-                      onChange={handlePasswordChange}
-                      placeholder="Enter current password"
-                      minLength={8}
-                      required
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label
-                      htmlFor="newPassword"
-                      className="text-sm font-medium"
+                    <Select
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({ ...prev, departmentId: val }))
+                      }
                     >
-                      New Password
-                    </Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      name="newPassword"
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange}
-                      placeholder="Enter new password"
-                      minLength={8}
-                      required
-                    />
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Department (Optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Department (Optional)</SelectLabel>
+                          {departments?.map((department) => (
+                            <SelectItem
+                              key={department.id}
+                              value={department.nameUz}
+                            >
+                              {department.nameUz}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Button
-                    type="submit"
-                    className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-                  >
-                    Update Password
+
+                  <FormField
+                    id="hemisId"
+                    label="Hemis ID (Optional)"
+                    name="hemisId"
+                    value={formData.hemisId}
+                    onChange={handleChange}
+                    placeholder={user?.hemisId}
+                  />
+
+                  <FormField
+                    id="orcid"
+                    label="ORCID (XXXX-XXXX-XXXX-XXXX) (Optional)"
+                    name="orcid"
+                    value={formData.orcid}
+                    onChange={handleChange}
+                    placeholder="ORCID (XXXX-XXXX-XXXX-XXXX) (Optional)"
+                  />
+
+                  <FormField
+                    id="ror"
+                    label="ROR (0xxxxxxXX) (Optional)"
+                    name="ror"
+                    value={formData.ror}
+                    onChange={handleChange}
+                    placeholder="ROR (0xxxxxxXX) (Optional)"
+                  />
+
+                  <FormField
+                    id="middleName"
+                    label="Middle name"
+                    name="middleName"
+                    value={formData.middleName}
+                    onChange={handleChange}
+                    maxLength={63}
+                    placeholder={user?.middleName}
+                    className="col-span-2"
+                  />
+                </div>
+
+                <div className="flex justify-between gap-1 flex-wrap">
+                  <Button type="submit" disabled={allFieldsEmpty}>
+                    {loading ? "Loading..." : "Save Profile Changes"}
                   </Button>
-                  {/* Success Message */}
-                  {errorMessage && (
-                    <div className="mb-6 p-4 bg-red-50 dark:bg-green-950/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-                      {errorMessage}
-                    </div>
-                  )}
-                </form>
-              </CardContent>
-            </Card>
-          </div>
+                  <Button onClick={logout} variant="destructive" type="button">
+                    Log out
+                    <LogOut />
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-border shadow-lg h-full pt-0 overflow-hidden">
+            <CardHeader className="border-b border-border pt-5 bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Lock className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Security</CardTitle>
+                  <CardDescription className="text-xs">
+                    Update password
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="oldPassword" className="text-sm font-medium">
+                    Current Password
+                  </Label>
+                  <Input
+                    id="oldPassword"
+                    type="password"
+                    name="oldPassword"
+                    value={passwordData.oldPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Enter current password"
+                    minLength={8}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="newPassword" className="text-sm font-medium">
+                    New Password
+                  </Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Enter new password"
+                    minLength={8}
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                >
+                  {loading ? "Loading..." : "Update Password"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </>
