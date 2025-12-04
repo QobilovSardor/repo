@@ -1,8 +1,10 @@
 import type { IDepartment } from "@/interface/department";
 import { apiRequest } from "./apiClient";
 
-export const getAllDepartment = async () =>
-  await apiRequest("/admin/department", "GET");
+export const getAllDepartment = async () => {
+  const res = await apiRequest("/admin/department", "GET");
+  return res?.data?.payload || [];
+};
 
 export const createDepartment = async (data: Partial<IDepartment>) =>
   await apiRequest("/admin/department", "POST", data);

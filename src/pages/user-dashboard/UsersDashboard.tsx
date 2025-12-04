@@ -1,10 +1,5 @@
-// src/app/admin/users/UsersDashboard.tsx
-"use client";
-
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Users, Plus, X } from "lucide-react";
-
-import { useStaffUsers } from "@/context/StaffUsers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,16 +13,13 @@ import {
 } from "@/components/ui/select";
 
 import { UserListTable } from "./UserListTable";
-import { useDepartments } from "@/context/DepartmentContext";
+import { useDepartments } from "@/context/department/useDepartment";
+import { useStaffUsers } from "@/context";
 
 export function UsersDashboard() {
   const { loading, error, successMessage, createUser, clearMessages } =
     useStaffUsers();
-  const { departments, fetchDepartments } = useDepartments();
-
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
+  const { departments } = useDepartments();
 
   const [formData, setFormData] = useState({
     username: "",

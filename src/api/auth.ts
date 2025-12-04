@@ -1,15 +1,7 @@
-import api, { apiRequest } from "./apiClient";
+import { apiRequest } from "./apiClient";
 
-export const login = async (data: { username: string; password: string }) => {
+export const loginFunc = async (data: { username: string; password: string }) => {
   const response = await apiRequest("/authenticate", "POST", data);
-
-  if (response.data?.payload) {
-    const { accessToken, refreshToken } = response.data.payload;
-    localStorage.setItem("token", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-    api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
-  }
-
   return response;
 };
 

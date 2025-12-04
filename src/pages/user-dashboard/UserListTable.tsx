@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useStaffUsers } from "@/context/StaffUsers";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Search, Edit2, Trash2 } from "lucide-react";
+import { useStaffUsers } from "@/context";
 
 export const UserListTable = () => {
   const { staffUsers, loading, deleteUser, fetchUsers } = useStaffUsers();

@@ -1,6 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { getUserData, login } from "@/api/auth";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,22 +10,18 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
-import { PATHS, USER_ROLES } from "@/configs/constants";
-import { useUser } from "@/context/UserContext";
+import { isPasswordLengthValid } from "@/helpers";
+import { useAuth } from "@/context";
+import type { ILoginForm } from "@/interface/user";
 
-interface LoginForm {
-  username: string;
-  password: string;
-}
 
 export const Login = () => {
-  const [formData, setFormData] = useState<LoginForm>({
+  const [formData, setFormData] = useState<ILoginForm>({
     username: "admin",
     password: "87654321",
   });
-  const navigate = useNavigate();
-  const { setUser } = useUser();
 
+  const { login } = useAuth();
   const [error, setError] = useState<string>("");
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -39,32 +34,21 @@ export const Login = () => {
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-
     setError("");
+
+    if (isPasswordLengthValid(formData.password) === false) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
 
     try {
       await login(formData);
-      const res = await getUserData();
-      const userRole = res?.data?.payload?.userRole;
-      setUser(res?.data?.payload);
-      switch (userRole) {
-        case USER_ROLES.ADMIN:
-          navigate(PATHS.ADMIN);
-          break;
-        // case USER_ROLES.STAFF:
-        //   navigate(PATHS.STAFF);
-        //   break;
-        // case USER_ROLES.AUTHOR:
-        //   navigate(PATHS.AUTHOR);
-        //   break;
-        default:
-          navigate(PATHS.USER);
-      }
-    } catch (err) {
-      console.error("Login failed:", err);
+    } catch (error) {
       setError("Invalid username or password");
+      console.log(error);
     }
   };
+
   return (
     <div className="h-[calc(100vh_-_65px)] flex justify-center items-center">
       <Card className="w-full max-w-sm mx-auto">

@@ -1,3 +1,7 @@
+export interface ILoginForm {
+  username: string;
+  password: string;
+}
 export interface IUser {
   id: number;
   username: string;
@@ -9,11 +13,8 @@ export interface IUser {
   status: "active" | "inactive";
   createdAt?: string;
   updatedAt?: string;
+  userRole: string;
 }
-
-// export interface IStaffUser extends Omit<IUser, "id"> {
-//   password: string;
-// }
 export interface IStaffUser {
   id: number;
   username: string;

@@ -11,8 +11,8 @@ import { useState } from "react";
 import type { IDepartment } from "@/interface/department";
 import { EditDepartment } from "./EditDepartament";
 import { DeleteDepartment } from "./DeleteDepartment";
-import { useDepartments } from "@/context/DepartmentContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDepartments } from "@/context/department/useDepartment";
 
 interface DepartmentTableProps {
   departments: IDepartment[];
