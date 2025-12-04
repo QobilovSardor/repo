@@ -13,12 +13,12 @@ import { Label } from "@radix-ui/react-label";
 import { isPasswordLengthValid } from "@/helpers";
 import { useAuth } from "@/context";
 import type { ILoginForm } from "@/interface";
-import { INITIAL_LOGIN_FORM_DATA } from "@/configs";
+import { INITIAL_LOGIN_FORM_DATA, PATHS } from "@/configs";
 
 export const Login = () => {
   const [formData, setFormData] = useState<ILoginForm>(INITIAL_LOGIN_FORM_DATA);
 
-  const { login, loading } = useAuth();
+  const { login, loading, authError } = useAuth();
   const [error, setError] = useState<string>("");
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -33,13 +33,13 @@ export const Login = () => {
     e.preventDefault();
     setError("");
 
-    if (isPasswordLengthValid(formData.password) === false) {
+    if (!isPasswordLengthValid(formData.password)) {
       setError("Password must be at least 8 characters long");
       return;
     }
-
     try {
       await login(formData);
+      console.log("salom");
     } catch (error) {
       setError("Invalid username or password");
       console.log(error);
@@ -55,6 +55,11 @@ export const Login = () => {
 
         <CardContent>
           <form onSubmit={handleLogin}>
+            {authError && (
+              <div className="mb-4 rounded-lg bg-red-100 px-4 py-3 text-sm text-red-700 border border-red-200">
+                {authError}
+              </div>
+            )}
             {error && (
               <div className="mb-4 rounded-lg bg-red-100 px-4 py-3 text-sm text-red-700 border border-red-200">
                 {error}
@@ -94,9 +99,9 @@ export const Login = () => {
         </CardContent>
 
         <CardFooter className="flex-col gap-2 -mt-3">
-          <Link to="/register" className="w-full">
+          <Link to={PATHS.REGISTER_AUTHOR} className="w-full">
             <Button variant="outline" className="w-full">
-              Ro'yxatdan o'tish
+              Register author
             </Button>
           </Link>
         </CardFooter>

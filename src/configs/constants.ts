@@ -23,12 +23,16 @@ export const PATHS = {
   DEPARTMENT: "/department",
   DOCUMENT: "/document",
   SUBMISSION: "/submission",
+  // new
+  USER_DASHBOARD: "/users-dashboard",
+  DASHBOARD: "/dashboard",
 };
 
 export const API_PATHS = {
   AUTHENTICATE: "/authenticate",
   SIGN_OUT: "/sign-out",
   REGISTER: "/register",
+  REGISTER_AUTHOR: "/register/author",
   USER: "/user",
   PUBLIC: "/public",
   ADMIN: "/admin",

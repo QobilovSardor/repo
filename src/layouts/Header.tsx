@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { PATHS } from "@/configs";
 import { useAuth } from "@/context";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -7,13 +8,17 @@ import { Link } from "react-router-dom";
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
-  const navItems = [
-    { label: "Home", href: "/" },
-    { label: "Dashboard", href: "/dashboard" },
-    { label: "User dashboard", href: "/users-dashboard" },
-    { label: "Department dashboard", href: "/department-dashboard" },
-  ];
   const { isAuthenticated } = useAuth();
+
+  const navItems = [
+    { label: "Home", href: PATHS.HOME },
+    // isAuthenticated && { label: "Dashboard", href: PATHS.DASHBOARD },
+    isAuthenticated && { label: "User dashboard", href: PATHS.USER_DASHBOARD },
+    isAuthenticated && {
+      label: "Department dashboard",
+      href: PATHS.DEPARTMENT,
+    },
+  ].filter(Boolean) as { label: string; href: string }[];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -30,7 +35,7 @@ export const Header = () => {
               <Link
                 key={item.href}
                 to={item.href}
-                className="px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted rounded-md"
+                className="px-3 flex items-center py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted rounded-md"
               >
                 {item.label}
               </Link>
@@ -40,16 +45,16 @@ export const Header = () => {
           {/* Desktop CTA Buttons */}
           {!isAuthenticated ? (
             <div className="hidden gap-2 md:flex">
-              <Link to="/login">
+              <Link to={PATHS.LOGIN}>
                 <Button>Kirish</Button>
               </Link>
-              <Link to="/register">
-                <Button variant="outline">Ro'yxatdan o'tish</Button>
+              <Link to={PATHS.REGISTER_AUTHOR}>
+                <Button variant="outline">Register author</Button>
               </Link>
             </div>
           ) : (
             <div className="flex gap-2">
-              <Link to="/profile">
+              <Link to={PATHS.ADMIN}>
                 <Button variant="outline">Profil</Button>
               </Link>
             </div>
@@ -82,7 +87,7 @@ export const Header = () => {
                 </Link>
               ))}
             </nav>
-            <Link to="/login">
+            <Link to={PATHS.LOGIN}>
               <Button>Kirish</Button>
             </Link>
           </div>

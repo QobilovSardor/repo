@@ -41,16 +41,20 @@ export const EditDepartment: React.FC<EditDepartmentProps> = ({
     isBlocked: false,
   });
 
+  const [originalData, setOriginalData] = useState<Partial<IDepartment>>({});
+
   useEffect(() => {
     if (selectedDep) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFormData({
+      const initData = {
         depType: selectedDep.depType,
         nameUz: selectedDep.nameUz,
         nameEn: selectedDep.nameEn || "",
         nameRu: selectedDep.nameRu || "",
         isBlocked: selectedDep.isBlocked,
-      });
+      };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFormData(initData);
+      setOriginalData(initData);
     }
   }, [selectedDep]);
 
@@ -87,6 +91,8 @@ export const EditDepartment: React.FC<EditDepartmentProps> = ({
 
     setOpenEditModal(false);
   };
+  const isFormUnchanged =
+    JSON.stringify(formData) === JSON.stringify(originalData);
 
   return (
     <Dialog open={openEditModal} onOpenChange={setOpenEditModal}>
@@ -165,7 +171,9 @@ export const EditDepartment: React.FC<EditDepartmentProps> = ({
             >
               Cancel
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={isFormUnchanged}>
+              Save Changes
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

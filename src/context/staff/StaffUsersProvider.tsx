@@ -11,6 +11,9 @@ import {
   updateStaffUser,
 } from "@/api/admin-users";
 import type { IStaffUser } from "@/interface";
+import { handleAxiosError } from "@/helpers";
+import { useAuth } from "../auth/useAuth";
+import { PATHS } from "@/configs";
 
 interface StaffUsersProviderProps {
   children: ReactNode;
@@ -18,6 +21,7 @@ interface StaffUsersProviderProps {
 
 export const StaffUsersProvider = ({ children }: StaffUsersProviderProps) => {
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
 
   const { data, isLoading, error } = useQuery<IStaffUser[], Error>({
     queryKey: ["staffUsers"],
@@ -25,7 +29,11 @@ export const StaffUsersProvider = ({ children }: StaffUsersProviderProps) => {
       const res = await getAllUsersFilter();
       return res.data?.payload?.clientList || [];
     },
+    select: (res) => res || [],
     staleTime: 5 * 60 * 1000,
+    enabled:
+      isAuthenticated &&
+      [PATHS.DEPARTMENT, PATHS.USER_DASHBOARD].includes(location.pathname),
   });
 
   const addMutation = useMutation({
@@ -80,13 +88,11 @@ export const StaffUsersProvider = ({ children }: StaffUsersProviderProps) => {
       try {
         await addMutation.mutateAsync(data);
         setSuccessMessage("Foydalanuvchi muvaffaqiyatli ro'yxatdan o'tdi!");
-      } catch (error) {
-        console.log(error);
-        // if(error?.response?.data.code === 2003) {
-        //   setErrorMessage("Foydalanuvchini nomi alaqachon mavjud");
-        //   return
-        // }
-        setErrorMessage("Foydalanuvchini yaratishda xato");
+      } catch (error: unknown) {
+        const message = handleAxiosError(error, {
+          2003: "Foydalanuvchi nomi alaqachon mavjud",
+        });
+        setErrorMessage(message);
       }
     },
     deleteUser: async (id) => {

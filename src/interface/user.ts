@@ -10,6 +10,7 @@ export interface IUser {
   hemisId?: string | null;
   orcid?: string | null;
   ror?: string | null;
+  email?: string;
 }
 export interface ILoginForm {
   username: string;

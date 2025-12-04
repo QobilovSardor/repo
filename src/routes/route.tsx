@@ -9,6 +9,7 @@ import {
   Register,
 } from "@/pages";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { PATHS } from "@/configs";
 
 export const AppRoutes = () => (
   <Routes>
@@ -28,15 +29,15 @@ export const AppRoutes = () => (
 );
 
 const routes = [
-  { path: "/", component: Home, protected: false },
-  { path: "/login", component: Login, protected: false },
-  { path: "/register", component: Register, protected: false },
-  { path: "/users-dashboard", component: UsersDashboard, protected: true },
+  { path: PATHS.HOME, component: Home, protected: false },
+  { path: PATHS.LOGIN, component: Login, protected: false },
+  { path: PATHS.REGISTER_AUTHOR, component: Register, protected: false },
+  { path: PATHS.USER_DASHBOARD, component: UsersDashboard, protected: true },
   {
-    path: "/department-dashboard",
+    path: PATHS.DEPARTMENT,
     component: DepartmentDashboard,
     protected: true,
   },
-  { path: "/dashboard", component: Dashboard, protected: true },
-  { path: "/profile", component: Profile, protected: true },
+  { path: PATHS.DASHBOARD, component: Dashboard, protected: true },
+  { path: PATHS.ADMIN, component: Profile, protected: true },
 ];

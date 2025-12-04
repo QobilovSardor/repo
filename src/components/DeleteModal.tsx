@@ -2,33 +2,36 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Dispatch, SetStateAction } from "react";
 
-interface DeleteDepartmentProps {
+interface DeleteModalProps {
   openDeleteModal: boolean;
   setOpenDeleteModal: Dispatch<SetStateAction<boolean>>;
   handleDeleteConfirm: () => void;
+  modalTitle: string;
+  modalDesc: string;
 }
-export const DeleteDepartment: React.FC<DeleteDepartmentProps> = ({
+
+export const DeleteModal: React.FC<DeleteModalProps> = ({
   openDeleteModal,
   setOpenDeleteModal,
   handleDeleteConfirm,
+  modalTitle,
+  modalDesc,
 }) => {
   return (
     <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Department</DialogTitle>
+          <DialogTitle>{modalTitle}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <p>
-            Are you sure you want to delete this department? This action cannot
-            be undone.
-          </p>
+          <DialogDescription>{modalDesc}</DialogDescription>
         </div>
         <DialogFooter className="gap-2">
           <Button

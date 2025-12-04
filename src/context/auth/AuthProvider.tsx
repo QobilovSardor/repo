@@ -2,8 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext, type AuthContextType } from "./AuthContext";
 import type { IUser } from "@/interface";
-import { getUserData, loginFunc, updateProfile } from "@/api/auth";
+import {
+  getUserData,
+  loginFunc,
+  registerFunc,
+  updateProfile,
+} from "@/api/auth";
 import { PATHS, USER_ROLES } from "@/configs/constants";
+import { handleAxiosError } from "@/helpers";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const storedUser = localStorage.getItem("user");
@@ -16,6 +22,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(false);
   const [authError, setError] = useState<string | null>(null);
 
+  // register function
+  const register: AuthContextType["login"] = async (formData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await registerFunc(formData as IUser);
+      const userData = res?.payload;
+      if (!userData) throw new Error("User data not found");
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem("user", JSON.stringify(userData));
+      navigate(PATHS.HOME);
+    } catch (error) {
+      const message = handleAxiosError(error, {
+        2001: "Invalid username or password",
+      });
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // login function
   const login: AuthContextType["login"] = async (formData) => {
     try {
@@ -24,7 +52,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await loginFunc(formData);
       const res = await getUserData();
       const userData = res?.payload;
-
       if (!userData) throw new Error("User data not found");
       setUser(userData);
       setIsAuthenticated(true);
@@ -40,8 +67,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         default:
           navigate(PATHS.USER);
       }
-    } catch {
-      setError("Login failed");
+    } catch (error) {
+      const message = handleAxiosError(error, {
+        2001: "Invalid username or password",
+      });
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -79,6 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         isAuthenticated,
+        register,
         login,
         logout,
         loading,

@@ -8,10 +8,10 @@ import {
 type ProviderProps = { children: React.ReactNode };
 
 const providers = [
-  UserProvider,
-  StaffUsersProvider,
-  DepartmentProvider,
   AuthProvider,
+  UserProvider,
+  DepartmentProvider,
+  StaffUsersProvider,
 ];
 
 export const AppProviders = ({ children }: ProviderProps) => {
